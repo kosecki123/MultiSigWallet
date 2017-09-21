@@ -1,5 +1,6 @@
 var txDefaultOrig =
 {
+  hdPath: "44'/60'/0'/0",
   gasLimit: 3141592,
   gasPrice: 18000000000,
   ethereumNode: "https://mainnet.infura.io:443",

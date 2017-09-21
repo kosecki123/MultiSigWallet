@@ -195,7 +195,7 @@
 
         var web3Provider = new HookedWeb3Provider({
           getAccounts: function (cb) {
-            $http.get(txDefault.ledgerAPI + "/accounts").success(function (accounts) {
+            $http.get(txDefault.ledgerAPI + "/accounts?hdPath=" + txDefault.hdPath).success(function (accounts) {
               cb(null, accounts);
             }).error(cb);
           },
@@ -205,7 +205,7 @@
           },
           signTransaction: function(txData, cb) {
             function sendToLedger(chainID) {
-              $http.post(txDefault.ledgerAPI + "/sign-transaction", {tx: txData, chain: chainID}).then(function (tx) {
+              $http.post(txDefault.ledgerAPI + "/sign-transaction", {tx: txData, chain: chainID, hdPath: txDefault.hdPath}).then(function (tx) {
                 Utils.stopSpinner();
                 cb(null, tx.data.signed);
               }, function(e){

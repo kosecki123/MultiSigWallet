@@ -12,6 +12,7 @@ const EthereumTx = require('ethereumjs-tx');
 const bodyParser = require('body-parser');
 let restServer, restPort = null;
 let ledgerAddresses = null;
+let hdPath = null;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -83,7 +84,7 @@ function restServerSetup () {
   // @todo to be implemented
   restServer.route('/accounts')
   .get(function (req, res) {
-    if (ledgerAddresses) {
+    if (ledgerAddresses && hdPath == req.query.hdPath) {
       res.json(ledgerAddresses);
     }
     else {
@@ -91,7 +92,7 @@ function restServerSetup () {
       .then(
         function(eth) {
           Promise.race([
-            eth.getAddress_async("44'/60'/0'/0", true),
+            eth.getAddress_async(req.query.hdPath, true),
             new Promise(
               (_, reject) => {
                 setTimeout(
@@ -103,6 +104,7 @@ function restServerSetup () {
           ])
           .then(function(addresses) {
             ledgerAddresses = [addresses.address];
+            hdPath = req.query.hdPath;
             res.json([addresses.address]);
           }, function (){
             res.status(500).send();
@@ -115,7 +117,7 @@ function restServerSetup () {
 
   restServer.route('/sign-transaction')
   .post(function (req, res) {
-    if (req.body && req.body.tx && req.body.chain) {
+    if (req.body && req.body.tx && req.body.chain && req.body.hdPath) {
       getLedgerConnection()
       .then(
         function(eth) {
@@ -132,7 +134,7 @@ function restServerSetup () {
           const hex = tx.serialize().toString("hex");
 
           // Pass to _ledger for signing
-          eth.signTransaction_async("44'/60'/0'/0", hex)
+          eth.signTransaction_async(req.body.hdPath, hex)
           .then(result => {
               // Store signature in transaction
               tx.v = new Buffer(result.v, "hex");
